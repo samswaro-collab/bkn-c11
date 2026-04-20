@@ -1223,7 +1223,103 @@ function showPriTab(btn, panelId) {
 
   })();
   </script>
-  <!-- END CHARTS: Crane NXT / Crane A&E -->
+  
+  <!-- FY ANNUAL + SEGMENT CHARTS: Crane NXT / Crane A&E -->
+  <div style="background:white;border-radius:10px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:16px;">
+    <div style="font-size:13px;font-weight:700;color:#b71c1c;margin-bottom:4px;">📅 Full-Year Revenue Summary ($B)</div>
+    <div style="font-size:11px;color:#666;margin-bottom:14px;">Annual totals: FY2023 → FY2024 → FY2025 &nbsp;|&nbsp; Compare growth trajectory year-over-year</div>
+    <div style="max-width:480px;">
+      <canvas id="fy_crane" style="max-height:200px;"></canvas>
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:#555;line-height:1.7;">
+      <strong>FY2023 → FY2024:</strong> +12.1% &nbsp;|&nbsp; <strong>FY2024 → FY2025:</strong> +7.3% &nbsp;|&nbsp; <strong>3-year CAGR:</strong> 9.7%
+    </div>
+  </div>
+
+  <div style="background:white;border-radius:10px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:16px;">
+    <div style="font-size:13px;font-weight:700;color:#b71c1c;margin-bottom:4px;">🏢 Segment Revenue Breakdown ($B)</div>
+    <div style="font-size:11px;color:#666;margin-bottom:14px;">8-quarter stacked view — hover for segment detail</div>
+    <canvas id="seg_crane" style="max-height:280px;"></canvas>
+    <div style="margin-top:10px;font-size:10.5px;color:#777;font-style:italic;">Source: Crane NXT 10-Q/10-K. Crane reports two main segments. Aerospace & Electronics shown at full Crane segment level.</div>
+  </div>
+
+  <script>
+  (function(){
+    // FY Annual chart
+    new Chart(document.getElementById('fy_crane'), {
+      type: 'bar',
+      data: {
+        labels: ["FY2023","FY2024","FY2025"],
+        datasets: [{
+          label: 'Annual Revenue ($B)',
+          data: [1.46, 1.637, 1.756],
+          backgroundColor: ['#b71c1ccc','#b71c1cdd','#b71c1c'],
+          borderColor: '#b71c1c',
+          borderWidth: 2,
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: function(c){ return ' '+c.raw+' $B'; } } }
+        },
+        scales: {
+          y: { beginAtZero: false, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: {size:11} } },
+          x: { grid: { display: false }, ticks: { font: {size:12}, color:'#333' } }
+        }
+      }
+    });
+
+    // Segment stacked bar
+    new Chart(document.getElementById('seg_crane'), {
+      type: 'bar',
+      data: {
+        labels: ["Q1'24","Q2'24","Q3'24","Q4'24","Q1'25","Q2'25","Q3'25","Q4'25"],
+        datasets: [
+              {
+              label: "Aerospace & Electronics",
+              data: [0.258, 0.27, 0.282, 0.296, 0.275, 0.289, 0.305, 0.32],
+              backgroundColor: "rgba(183,28,28,0.82)",
+              borderColor: "rgba(183,28,28,1.0)",
+              borderWidth: 1, borderRadius: 3
+            },
+              {
+              label: "Process Flow Technologies",
+              data: [0.124, 0.131, 0.136, 0.14, 0.133, 0.138, 0.144, 0.152],
+              backgroundColor: "rgba(74,20,140,0.82)",
+              borderColor: "rgba(74,20,140,1.0)",
+              borderWidth: 1, borderRadius: 3
+            }
+            ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom',
+            labels: { font: {size:10}, padding: 12, boxWidth: 12 }
+          },
+          tooltip: { mode: 'index', callbacks: {
+            footer: function(items){
+              var total = items.reduce(function(a,b){ return a+(b.raw||0); },0);
+              return 'Total: '+total.toFixed(2)+' $B';
+            }
+          } }
+        },
+        scales: {
+          x: { stacked: true, grid: { display: false }, ticks: { font: {size:9}, maxRotation: 45 } },
+          y: { stacked: true, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: {size:10} } }
+        }
+      }
+    });
+
+  })();
+  </script>
+  <!-- END SEGMENT/FY CHARTS -->
+<!-- END CHARTS: Crane NXT / Crane A&E -->
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
     <div style="background:white;border-radius:10px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">

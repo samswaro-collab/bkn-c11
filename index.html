@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crane Aerospace & Electronics | BEAKON Sales Intelligence Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f5;color:#333;overflow-x:hidden;}
+.topbar{background:#0a2342;color:white;padding:12px 20px;display:flex;align-items:center;gap:20px;border-bottom:3px solid #0076be;position:sticky;top:0;z-index:100;}
+.logo-pill{background:white;color:#0076be;padding:6px 12px;border-radius:20px;font-weight:bold;font-size:13px;}
+.topbar-title{flex:1;font-size:18px;font-weight:600;}
+.pill{background:rgba(255,255,255,0.15);padding:5px 10px;border-radius:15px;font-size:12px;}
+.pill-status{background:#4caf50;padding:5px 10px;border-radius:15px;font-size:12px;}
+.refresh-banner{background:#0076be;color:white;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;font-size:13px;position:sticky;top:50px;z-index:99;}
+.container{display:flex;min-height:calc(100vh - 80px);}
+.sidebar{width:240px;background:#0a2342;color:white;padding:20px 0;overflow-y:auto;height:calc(100vh - 80px);position:sticky;top:80px;}
+.sidebar-label{font-size:11px;font-weight:700;text-transform:uppercase;color:#999;padding:0 15px;margin-bottom:8px;letter-spacing:0.5px;}
+.sidebar-section{margin-bottom:22px;}
+.sidebar-item{padding:10px 15px;cursor:pointer;font-size:13px;transition:all 0.2s;border-left:3px solid transparent;}
+.sidebar-item:hover{background:rgba(0,118,190,0.2);}
+.sidebar-item.active{background:rgba(0,118,190,0.3);border-left-color:#0076be;font-weight:600;}
+.sidebar-meta{font-size:10px;color:#aaa;padding:2px 15px 8px 15px;line-height:1.4;}
+.main-content{flex:1;padding:30px;overflow-y:auto;height:calc(100vh - 80px);}
+.section{display:none;}
+.section.active{display:block;}
+.section-title{font-size:20px;font-weight:700;color:#0a2342;margin-bottom:22px;padding-bottom:10px;border-bottom:2px solid #0076be;}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+.card{background:white;border-radius:8px;padding:18px;box-shadow:0 2px 6px rgba(0,0,0,0.08);border:1px solid #e8e8e8;}
+.card-title{font-size:12px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;}
+.kpi{font-size:28px;font-weight:800;color:#0a2342;margin-bottom:4px;}
+.kpi-label{font-size:11px;color:#666;}
+.kpi-change{font-size:11px;color:#4caf50;font-weight:600;margin-top:4px;}
+.prog-badge{display:inline-block;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;margin-right:6px;margin-bottom:4px;}
+.chain{display:grid;grid-template-columns:40px 1fr;gap:16px;padding:16px;border-radius:8px;background:#fafafa;}
+.chain-num{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;color:white;font-weight:800;font-size:16px;}
+.chain-body{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.chain-cell{padding:14px;border-radius:6px;}
+.chain-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
+.chain-head{font-size:13px;font-weight:700;color:#0a2342;margin-bottom:6px;}
+.chain-body-text{font-size:11.5px;color:#555;line-height:1.6;}
+.contact-card{background:white;border-radius:8px;padding:16px;border:1.5px solid #e8e8e8;border-left:4px solid #0076be;}
+.contact-badge{display:inline-block;background:#0076be;color:white;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;margin-bottom:6px;}
+.trigger-card{background:white;border-radius:8px;padding:16px;border:1px solid #e8e8e8;border-left:4px solid #0076be;}
+.trigger-icon{font-size:18px;margin-bottom:4px;}
+.trigger-label{font-size:12px;font-weight:700;color:#0a2342;margin-bottom:4px;}
+.trigger-body{font-size:11px;color:#555;line-height:1.6;margin-bottom:8px;}
+.trigger-action{background:#f0f7ff;border-radius:6px;padding:8px 12px;font-size:10.5px;color:#0055b3;font-weight:600;font-family:monospace;}
+.playbook-step{background:white;border-radius:8px;padding:16px;border:1px solid #e8e8e8;margin-bottom:12px;}
+.step-num{display:inline-block;background:#0076be;color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;margin-right:12px;vertical-align:middle;}
+.step-label{font-size:13px;font-weight:700;color:#0a2342;margin-bottom:6px;}
+.step-body{font-size:11.5px;color:#555;line-height:1.6;}
+.alert-banner{background:#fef9c3;border:1.5px solid #eab308;border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:12px;color:#713f12;display:flex;align-items:center;gap:10px;}
+.alert-icon{font-size:16px;}
+.partnership-card{background:white;border-radius:8px;padding:16px;border:1px solid #e8e8e8;}
+.partnership-name{font-size:13px;font-weight:700;color:#0a2342;margin-bottom:4px;}
+.partnership-type{font-size:10px;font-weight:600;color:#0076be;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+.partnership-desc{font-size:11px;color:#555;line-height:1.6;margin-bottom:8px;}
+.partnership-angle{font-size:10.5px;background:#f0f7ff;color:#0055b3;padding:8px;border-radius:6px;border-left:3px solid #0076be;}
+.event-card{background:white;border-radius:8px;padding:16px;border:1px solid #e8e8e8;}
+.event-name{font-size:13px;font-weight:700;color:#0a2342;margin-bottom:4px;}
+.event-date{font-size:11px;color:#666;margin-bottom:4px;}
+.event-priority{display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;margin-bottom:8px;}
+.event-desc{font-size:11px;color:#555;line-height:1.6;}
+.hiring-role{background:white;border-radius:8px;padding:14px;border:1px solid #e8e8e8;border-left:4px solid #0076be;}
+.hiring-role-title{font-size:12px;font-weight:700;color:#0a2342;margin-bottom:2px;}
+.hiring-role-location{font-size:11px;color:#666;}
+.fast-sell-skill{background:white;border-radius:8px;padding:16px;border:1.5px solid #0076be;}
+.skill-icon{font-size:20px;margin-bottom:8px;}
+.skill-title{font-size:13px;font-weight:700;color:#0a2342;margin-bottom:6px;}
+.skill-desc{font-size:11px;color:#555;line-height:1.6;}
+@media(max-width:1200px){.grid-4{grid-template-columns:repeat(2,1fr);}}.chain-body{grid-template-columns:1fr;}
+</style>
+</head>
+<body>
+
+<script>
+const CR_DATA = {
+  lastRefreshed: "Apr 19, 2026",
+  dataSource: "Crane Company 10-K FY2024 + Q4 2024 Earnings Call + Vian Acquisition Press Release Jan 2024",
+
+  // Segment-level financials (A&E only)
+  revenue:        760.4,   // $M USD FY 2024
+  revenueGrowth:  18,      // % YoY (Vian + organic)
+  backlog:        864,     // $M USD Dec 2024
+  backlogGrowth:  23,      // % YoY
+  ebitdaMargin:   22.4,    // % adjusted EBITDA
+  headcount:      3200,    // approx A&E segment
+  openRoles:      150,     // approx open LinkedIn roles (A&E non-cleared)
+  craneParentRevenue: 3700, // Total Crane Company FY2024
+  parentEmployees: 8500,   // Total Crane Company
+
+  // Key sites
+  sites: {
+    burbank:    { label: "Burbank CA (Hydro-Aire HQ)", programs: ["Landing Systems", "Brake Control", "F-35 BCS", "KC-46"], roles: 600 },
+    lynnwood:   { label: "Lynnwood WA (ELDEC)", programs: ["Sensing & Connectivity", "Boeing sensors", "Proximity/Position", "F-35 Sensors"], roles: 400 },
+    redmond:    { label: "Redmond WA (Interpoint)", programs: ["Power Electronics", "DC/DC Converters", "Defense/Space", "UAV Power"], roles: 200 },
+    elyria:     { label: "Elyria OH (Lear Romec)", programs: ["Fluid Management", "Fuel Systems", "Rotorcraft", "Valves/Pumps"], roles: 300 },
+    colorado:   { label: "Colorado Springs CO (Vian Electronics)", programs: ["Missile Seekers", "Microwave Components", "Defense", "Acquired Jan 2024"], roles: 180 },
+    stamford:   { label: "Stamford CT (Crane HQ)", programs: ["Corporate Leadership", "Finance", "Strategy"], roles: 150 }
+  },
+
+  // Leadership & key contacts (VP Engineering + above ONLY)
+  leadership: {
+    ceo:  { name:"Alex Alcala",       title:"President & CEO, Crane Company",       since:"April 27, 2026", location:"Stamford, CT" },
+    cfo:  { name:"Rich Maue",         title:"EVP & CFO, Crane Company",              since:"—", location:"Stamford, CT" },
+    vpA:  { name:"John Higgs",        title:"President, Crane Aerospace & Electronics", since:"—", location:"Burbank, CA" },
+    vpEng1:{ name:"VP Engineering (Hydro-Aire Landing Systems)", title:"VP Engineering — Hydro-Aire Division", since:"—", location:"Burbank, CA" },
+    vpEng2:{ name:"VP Engineering (ELDEC Sensing)", title:"VP Engineering — ELDEC Sensing & Connectivity", since:"—", location:"Lynnwood, WA" },
+    vpEng3:{ name:"VP Engineering (Interpoint Power)", title:"Director Engineering — Interpoint Power Electronics", since:"—", location:"Redmond, WA" },
+    vpEng4:{ name:"Director Engineering (Vian Electronics)", title:"Director Engineering — Vian Electronics", since:"—", location:"Colorado Springs, CO" }
+  },
+
+  keyContacts: [
+    { name:"John Higgs",             title:"President, Crane Aerospace & Electronics",    loc:"Burbank, CA",    badge:"Primary Target",   color:"#1b5e20",
+      pitch:"Chief commercial officer for A&E segment. Budget authority for all divisions. Entry point for multi-site partnership. Pitch: 'Hydro-Aire BCS DO-178C documentation + tech pubs — we've scaled this for Airbus at equivalent delivery volumes. 4-week pilot scope.'" },
+    { name:"VP Engineering, Hydro-Aire (Landing Systems)", title:"VP Eng · Brake Control Systems · F-35 BCS Lead", loc:"Burbank, CA", badge:"Hot Target", color:"#c62828",
+      pitch:"Direct owner of F-35 BCS program and KC-46 landing systems. BCS is high-content, heavily documented system. Search: 'Crane Aerospace Hydro-Aire VP Engineering Burbank' on LinkedIn. Fast-sell: 'CMM revision for F-35 BCS + DO-178C verification — India delivery, 60% cost advantage.'" },
+    { name:"VP Engineering, ELDEC (Sensing & Connectivity)", title:"VP Eng · Boeing/Airbus Sensors · ELDEC Lead", loc:"Lynnwood, WA", badge:"Engineering Buyer", color:"#0055b3",
+      pitch:"Owns sensor design, test, and certification for Boeing 737/777X, Airbus A320/A350, F-35 sensing systems. ELDEC is high-reliability, DO-254 certified. Entry: Technical publications (ATA-24 electrical) for sensor suites. Search: 'Crane Aerospace ELDEC Engineering Director' on LinkedIn." },
+    { name:"Director Engineering, Interpoint / Vian", title:"Dir. Eng · Power Electronics & Missile Seekers", loc:"Redmond/Colorado Springs, CO", badge:"Defense Growth", color:"#0076be",
+      pitch:"Leads power electronics (DC/DC converters, space/DoD) + Vian missile seeker integration post-acquisition. High-reliability, DO-178C/DO-254 critical. Pitch: 'Integration documentation for Vian acquisition — ICD management, DO-254 design assurance for missile seeker electronics. 3-month project scope.'" },
+    { name:"Rich Maue",               title:"EVP & CFO, Crane Company",                   loc:"Stamford, CT",  badge:"Cost Angle",  color:"#0076be",
+      pitch:"Controls capital allocation and ER&D spending. Receptive to India cost model. Pitch: 'Vian integration and F-35 BCS production ramp both need engineering that scales without CAPEX. Cyient model fits.' Executive avenue for CFO-to-CFO introduction." },
+    { name:"Alex Alcala",             title:"President & CEO, Crane Company",             loc:"Stamford, CT",  badge:"Strategic",  color:"#c25700",
+      pitch:"Just appointed April 27, 2026 — NEW CEO = NEW partnership window. Cyient pitch: 'Bombardier and Gulfstream both use Cyient at scale for aerospace ER&D. Crane A&E can capture same India engineering advantage on Hydro-Aire and ELDEC programs.' LinkedIn: Request intro via Bombardier contacts." }
+  ],
+
+  // Product divisions
+  divisions: {
+    hydroAire: {
+      name: "Hydro-Aire (Landing Systems)",
+      hq: "Burbank CA",
+      products: ["Brake Control Systems (BCS)", "Anti-Skid Systems", "Nose-Wheel Steering", "Landing Gear Control"],
+      keyPrograms: ["F-35 Lightning II (BCS)", "KC-46 Tanker (Landing Systems)", "C-17 Globemaster (Brake Control)", "Commercial ATA-32"],
+      revenue: "~$200M",
+      employees: 600,
+      doContent: "High DO-254/DO-178C content — BCS is safety-critical avionics component. AMM, IPC, SRM authoring for landing systems.",
+      cyientAngle: "CMM/IPC documentation authoring, DO-178C VVer support for BCS software, maintenance manual revisions"
+    },
+    eldec: {
+      name: "ELDEC (Sensing & Connectivity)",
+      hq: "Lynnwood WA",
+      products: ["Proximity Sensors", "Position Sensors", "Fluid Measurement Systems", "Environmental Monitoring"],
+      keyPrograms: ["Boeing 737 MAX", "Boeing 777X", "Boeing 787", "Airbus A320", "Airbus A350", "F-35 Sensing Systems"],
+      revenue: "~$180M",
+      employees: 400,
+      doContent: "DO-254 certified sensor suites. ATA-24 electrical, ATA-28 fuel, sensor interface documentation.",
+      cyientAngle: "Technical publications (ATA 24/28/32), IPC documentation for sensor integration, DO-254 design assurance"
+    },
+    interpoint: {
+      name: "Interpoint (Power & Microelectronics)",
+      hq: "Redmond WA",
+      products: ["High-Reliability DC/DC Converters", "Power Conditioning", "Space-Grade Electronics", "Radiation-Hardened Circuits"],
+      keyPrograms: ["DoD Satellites", "UAV Power Systems", "Missile Guidance Electronics", "Space Payloads"],
+      revenue: "~$180M",
+      employees: 200,
+      doContent: "DO-178C/DO-254 for defense; MIL-STD compliance for space. Design assurance, certification technical files.",
+      cyientAngle: "DO-254 design verification, technical file authoring, radiation hardness assurance (RHA) documentation"
+    },
+    vian: {
+      name: "Vian Electronics (Acquired Jan 2024)",
+      hq: "Colorado Springs CO",
+      products: ["Missile Seeker Microwave Components", "RF/Microwave Assemblies", "Defense Electronics", "Radar Components"],
+      keyPrograms: ["Advanced Missile Programs", "DoD Long-Range Strike", "LRIP Integration"],
+      revenue: "Part of Power segment post-acq",
+      employees: 180,
+      doContent: "Missile electronics — high-security, integration-heavy. Design assurance, technical data packages.",
+      cyientAngle: "Integration documentation post-acquisition, ICD management, tech data package authoring, supply chain documentation"
+    },
+    learRomec: {
+      name: "Lear Romec (Fluid Management)",
+      hq: "Elyria OH",
+      products: ["Fuel System Components", "Pumps", "Valves", "Fuel Management Electronics"],
+      keyPrograms: ["Military Rotorcraft", "Commercial Regional Jets", "Sustainment"],
+      revenue: "~$120M",
+      employees: 300,
+      doContent: "ATA-28 fuel systems, maintenance manuals, overhaul procedures. AMM/CMM for fluid system integration.",
+      cyientAngle: "Fuel system documentation (ATA-28), CMM authoring, overhaul manual support"
+    }
+  },
+
+  outreachPlaybook: {
+    badge: "Cold→Warm",
+    headline: "Vian acquisition integration + $864M backlog ramp + Alex Alcala as new CEO = partnership window NOW",
+    triggers: [
+      { icon:"🎯", label:"Vian Electronics Integration (Jan 2024 — ongoing)",
+        body:"Crane acquired Vian Enterprises for $103M in January 2024, adding missile seeker microwave components and defense electronics to the Power & Microelectronics portfolio. Integration is in full swing — new product line documentation, ICD management, tech data packages all need to be architected and authored.",
+        action:"Email hook: 'Vian integration means a lot of technical data package work. We've handled acquisition integrations for [ref OEM]. Are you owners resourcing the doc side? 20-min call?'" },
+      { icon:"📈", label:"$864M Backlog (+23% YoY) Production Ramp",
+        body:"Crane A&E backlog hit $864M in December 2024, up 23% YoY — representing 19+ months of revenue visibility. F-35 multi-year LRIP, Boeing 737 MAX rate increases, and KC-46 production all drive sustained Hydro-Aire BCS and ELDEC sensor demand. Production engineering bandwidth pressure is real.",
+        action:"Pitch: 'Your backlog is up 23% — engineering bandwidth is tight. Hydro-Aire BCS and ELDEC sensors both need CMM/IPC documentation fast. India delivery, 4-week pilot scope.'" },
+      { icon:"🚀", label:"Alex Alcala — New CEO (April 27, 2026)",
+        body:"Alex Alcala just appointed as President & CEO of Crane Company effective April 27, 2026. New CEO = new partnership receptiveness window. Alcala is a strategic thinker — previous experience at conglomerates means he understands India engineering leverage and cost model advantages.",
+        action:"Timing hook: 'With Alex Alcala's appointment, this is the right moment to discuss Crane's India engineering strategy. Bombardier and Gulfstream are already at scale with Cyient. Let's explore how that model applies to your A&E segment.'" },
+      { icon:"🛡️", label:"F-35 LRIP Sustained Demand",
+        body:"F-35 Lightning II multi-year LRIP (Low-Rate Initial Production) drives sustained, long-tail demand for Hydro-Aire BCS (brake control) and ELDEC sensor suites. LRIP runs through 2032+ — predictable, high-margin sustainment revenue for Crane A&E.",
+        action:"Strategic angle: 'F-35 BCS is a 10-year program. We can scale documentation and verification support proportionally. DO-178C VVer, CMM authoring — India delivery scales with your production rate.'" },
+      { icon:"🎯", label:"737 MAX Production Rate Increase",
+        body:"Boeing 737 MAX production is ramping hard post-grounding certification (2020). ELDEC sensors on MAX are high-volume, tight-delivery-schedule components. Crane is feeling this rate pressure — documentation and certification demands follow production.",
+        action:"Email: 'Boeing 737 MAX rate is up, which means your ELDEC sensor ramp is tight. We can handle technical publications and DO-254 support. 3-week scope, India-delivered.'" }
+    ],
+    coldToWarm: [
+      { step:1, label:"Signal Monitor", body:"Track Crane earnings calls, F-35 LRIP announcements, Boeing 737 MAX delivery rates, and Vian integration news. Each production milestone = engineering demand signal." },
+      { step:2, label:"Personalised Email", body:"Reference Hydro-Aire BCS or ELDEC sensor program. Mention Vian integration timing or backlog growth. One sentence on Cyient's aerospace certification expertise. One question." },
+      { step:3, label:"LinkedIn Outreach", body:"Connect with VP Engineering (Hydro-Aire, ELDEC, Interpoint) and Crane A&E leadership in Burbank/Lynnwood. Engage F-35 BCS or DO-254 sensor content." },
+      { step:4, label:"Event Pre-Outreach", body:"2 weeks before industry events (EIA Forum, NDIA, ASC): email to schedule meeting. Crane always has booth presence at defense/aerospace conferences." },
+      { step:5, label:"Warm Meeting", body:"Agenda: F-35 BCS or ELDEC sensor documentation pressure → Cyient track record (Boeing, Lockheed, Bombardier) → India cost model → 4-week pilot scope for CMM/IPC or DO-254 VVer." }
+    ]
+  },
+
+  partnerships: [
+    { name:"Boeing Defense, Space & Security", type:"Platform OEM", status:"Active",
+      desc:"Boeing integrates Hydro-Aire BCS and ELDEC sensors on F-15, F/A-18, and business jet platforms. Major supplier relationship for defense content.",
+      angle:"Crane is a Tier-1 to Boeing. Cyient pitch: 'We do your Boeing supplier engineering work at scale. Same capability to Crane.' Tech pubs, ICD management, DO-178C support for Crane's deliverables to Boeing." },
+    { name:"Lockheed Martin (F-35 Program Office)", type:"Platform Prime", status:"Active",
+      desc:"F-35 Lightning II is the largest defense contract ever. Hydro-Aire BCS is production hardware. LRIP runs through 2032+.",
+      angle:"Entry via F-35 supplier coordination. Crane's F-35 BCS engineering = prime opportunity for Cyient India ER&D. Do-178C verification, CMM authoring, sustainment engineering for 10+ year tail." },
+    { name:"Airbus Commercial Aircraft", type:"Platform OEM", status:"Active",
+      desc:"ELDEC sensors on A320, A350 are high-volume, long-tail programs. Airbus is Crane's largest commercial customer.",
+      angle:"Crane's technical publications (ATA-24 electrical) for Airbus sensor suites = natural outsource to Cyient. Airbus rate increases = demand signal for documentation scaling." },
+    { name:"Honeywell Aerospace (Avionics)", type:"Systems Integrator", status:"Active",
+      desc:"Honeywell integrates Crane sensor and power components into avionics systems for commercial and defense aircraft.",
+      angle:"Crane's interface control documents (ICDs) and technical specifications to Honeywell = Cyient support opportunity. Do-254 design assurance, integration documentation." }
+  ],
+
+  events: [
+    { name:"IEEE/AIAA Aerospace Conference", date:"May 4–8, 2026", location:"Big Sky, MT",
+      type:"Technical Conference", priority:"🟡 MEDIUM",
+      why:"Aerospace engineering community, defense/commercial mix. Crane often presents on F-35 BCS innovations and sensor technology." },
+    { name:"NDIA 2026 Systems Engineering Conference", date:"Oct 15–17, 2026", location:"San Diego, CA",
+      type:"Trade Show", priority:"🔴 MUST",
+      why:"National Defense Industrial Association. Crane Defense leadership attends. F-35 LRIP engineering discussions, supplier coordination." },
+    { name:"EIA Aerospace & Defense Forum", date:"June 10–12, 2026", location:"Arlington, VA",
+      type:"Trade Show", priority:"🔴 MUST",
+      why:"Electronic Industries Alliance. Crane A&E segment leadership, supplier network, defense community. Tech pubs, certification engineering visibility." },
+    { name:"SAE AeroTech Congress", date:"Sept 8–10, 2026", location:"Fort Worth, TX",
+      type:"Technical Conference", priority:"🟡 MEDIUM",
+      why:"Commercial and defense aerospace engineering. Crane presents on systems integration, certification engineering advances." },
+    { name:"DoDIIS Warrior (Intelligence Systems)", date:"Oct 20–22, 2026", location:"Tampa, FL",
+      type:"Defense Forum", priority:"🟡 MEDIUM",
+      why:"Vian Electronics integration + defense electronics visibility. Classified and non-classified segments meet." }
+  ],
+
+  hiringSignals: {
+    nonCleared: [
+      { title:"Embedded Software Engineers (DO-178C)", location:"Burbank CA, Lynnwood WA", desc:"Avionics brake control and sensor system firmware. Need C/C++, DO-178C certification experience, airborne systems background." },
+      { title:"FPGA / VHDL Engineers", location:"Lynnwood WA, Redmond WA", desc:"Sensor system FPGA design, avionics sensor electronics, high-reliability digital design." },
+      { title:"Systems Integration Engineers", location:"Burbank CA", desc:"Landing systems and brake control integration. Interface management, test planning, configuration control." },
+      { title:"Hardware Design Engineers (Power Electronics)", location:"Redmond WA", desc:"DC/DC converter design, power distribution, space-grade and defense-grade component selection." },
+      { title:"Structural / Mechanical Design Engineers", location:"Burbank CA, Lynnwood WA", desc:"Landing gear structural analysis, sensor housing design, environmental qualification." },
+      { title:"Verification & Validation Engineers", location:"Burbank CA, Lynnwood WA", desc:"DO-178C/DO-254 verification, avionics test automation, certification support." },
+      { title:"Technical Publications / Documentation", location:"Burbank CA, Elyria OH", desc:"AMM/CMM (Aircraft Maintenance Manual), Illustrated Parts Catalogs (IPC), ATA-32 landing systems documentation." }
+    ]
+  },
+
+  programs: {
+    f35: { name: "F-35 Lightning II (LRIP)", status: "Multi-year production", note: "Hydro-Aire BCS (brake control), ELDEC sensors. 19+ months backlog visibility. LRIP through 2032+." },
+    boeing737: { name: "Boeing 737 MAX / NG", status: "High production rate", note: "ELDEC sensors (proximity, position). Rate increasing post-grounding. High-volume, tight delivery." },
+    kc46: { name: "KC-46 Pegasus (Air Force Tanker)", status: "In production", note: "Hydro-Aire landing systems, ELDEC sensors. Boeing-led program. Sustained demand through 2030s." },
+    c17: { name: "C-17 Globemaster III (Sustainment)", status: "Long-tail program", note: "Hydro-Aire brake control systems. MRO/overhaul, sustainment contracts, documentation." },
+    airbus: { name: "Airbus A320/A350 Family", status: "High volume", note: "ELDEC sensors. A320 is world's most-produced commercial jet. A350 is flagship widebody." }
+  }
+};
+</script>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-pill">⚡ BEAKON</div>
+  <div class="topbar-title">Crane Aerospace & Electronics — Sales Intelligence Dashboard</div>
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+    <div class="pill">$760M A&E Revenue</div>
+    <div class="pill">$864M Backlog</div>
+    <div class="pill">3,200 Employees (A&E)</div>
+    <div class="pill-status">● Live</div>
+  </div>
+</div>
+
+<!-- REFRESH BANNER -->
+<div class="refresh-banner">
+  <span>⚡ Crane Company Aerospace & Electronics Segment · President: John Higgs · $760M FY2024 revenue (+18% YoY) · $864M backlog (+23%) · New CEO Alex Alcala (Apr 27, 2026)</span>
+  <span style="font-size:11px;opacity:.8;">Data: Apr 2026</span>
+</div>
+
+<div class="container">
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Crane A&E</div>
+    <div class="sidebar-meta">Burbank CA · Lynnwood WA<br>Redmond WA · Elyria OH<br>Colorado Springs CO<br>Vian Acquisition Jan 2024</div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Sales</div>
+    <div class="sidebar-item active" onclick="switchSection(event,'overview')">📊 Summary KPIs</div>
+    <div class="sidebar-item" onclick="switchSection(event,'contacts')">👥 Key Contacts</div>
+    <div class="sidebar-item" onclick="switchSection(event,'divisions')">🏭 Product Divisions</div>
+    <div class="sidebar-item" onclick="switchSection(event,'skills')">⚡ Fast-Sell Skills</div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Intelligence</div>
+    <div class="sidebar-item" onclick="switchSection(event,'hiring')">💼 Hiring Intelligence</div>
+    <div class="sidebar-item" onclick="switchSection(event,'signals')">📡 Signal Chains</div>
+    <div class="sidebar-item" onclick="switchSection(event,'competitive')">⚔️ F-35 Competitive Angle</div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Outreach Playbook</div>
+    <div class="sidebar-item" onclick="switchSection(event,'outreach')">🤝 Outreach Playbook <span style="background:#4caf50;color:#fff;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;margin-left:4px;">Cold→Warm</span></div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Partnership &amp; Alliances</div>
+    <div class="sidebar-item" onclick="switchSection(event,'partnerships')">🤝 Partnerships &amp; Alliances</div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Industry Events</div>
+    <div class="sidebar-item" onclick="switchSection(event,'events')">📅 Industry Events</div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Programs & Strategy</div>
+    <div class="sidebar-item" onclick="switchSection(event,'programs')">✈️ Key Programs</div>
+    <div class="sidebar-item" onclick="switchSection(event,'defense')">🛡️ Defense Growth</div>
+    <div class="sidebar-item" onclick="switchSection(event,'india')">🇮🇳 India ER&D Model</div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Reference</div>
+    <div class="sidebar-item" onclick="switchSection(event,'reference')">📚 Market Context</div>
+  </div>
+  <div style="padding:15px;font-size:10px;color:#666;border-top:1px solid rgba(255,255,255,0.1);margin-top:10px;">
+    Last refreshed: <span id="sb-refresh">—</span>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+
+<!-- ═══ OVERVIEW ═══ -->
+<div id="overview" class="section active">
+  <div class="section-title">📊 Crane Aerospace & Electronics — Summary KPIs</div>
+
+  <!-- Strategic banner -->
+  <div style="background:linear-gradient(135deg,#0a2342,#0076be);color:white;border-radius:10px;padding:15px 20px;margin-bottom:22px;">
+    <div style="font-size:14px;font-weight:700;margin-bottom:6px;">🚀 Strategic Context: Vian Acquisition + F-35 LRIP + Alex Alcala CEO</div>
+    <div style="font-size:12px;opacity:.93;line-height:1.7;">Crane Company (NYSE: CR) completed separation from Crane Holdings in April 2023 and is now a pure-play diversified manufacturer. The Aerospace & Electronics segment is the growth engine — acquired Vian Enterprises ($103M, Jan 2024) to add missile seeker and microwave components. Revenue $760.4M FY2024, up 18% YoY. Backlog hit $864M in Dec 2024 (+23% YoY) with 19+ months visibility. F-35 LRIP multi-year contract drives Hydro-Aire BCS and ELDEC sensor demand. New CEO Alex Alcala (April 27, 2026) brings strategic, cost-conscious leadership. <strong>India engineering is a strategic gap — Cyient is perfectly positioned.</strong></div>
+  </div>
+
+  <!-- KPIs row 1 -->
+  <div class="grid-4" style="margin-bottom:20px;">
+    <div class="card">
+      <div class="card-title">Revenue (FY 2024)</div>
+      <div class="kpi">$760.4M</div>
+      <div class="kpi-label">USD · A&E Segment FY 2024</div>
+      <div class="kpi-change">▲ +18% YoY</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Order Backlog</div>
+      <div class="kpi">$864M</div>
+      <div class="kpi-label">As of Dec 2024</div>
+      <div class="kpi-change">▲ +23% YoY</div>
+    </div>
+    <div class="card">
+      <div class="card-title">EBITDA Margin</div>
+      <div class="kpi">22.4%</div>
+      <div class="kpi-label">Adjusted FY 2024</div>
+      <div class="kpi-change">Best-in-class aerospace</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Backlog / Revenue</div>
+      <div class="kpi">19+ mo</div>
+      <div class="kpi-label">Visibility</div>
+      <div class="kpi-change">Strong demand through 2027</div>
+    </div>
+  </div>
+
+  <!-- KPIs row 2 -->
+  <div class="grid-4" style="margin-bottom:22px;">
+    <div class="card">
+      <div class="card-title">Headcount (A&E)</div>
+      <div class="kpi">~3,200</div>
+      <div class="kpi-label">A&E Segment</div>
+      <div class="kpi-change">Growing with backlog</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Parent Crane Revenue</div>
+      <div class="kpi">$3.7B</div>
+      <div class="kpi-label">Total Company FY2024</div>
+      <div class="kpi-change">Multi-segment diversified</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Open Roles (Est.)</div>
+      <div class="kpi">~150</div>
+      <div class="kpi-label">Non-cleared, A&E only</div>
+      <div class="kpi-change">DO-178C/DO-254 heavy</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Vian Acquisition</div>
+      <div class="kpi">$103M</div>
+      <div class="kpi-label">January 2024</div>
+      <div class="kpi-change">Integration in progress</div>
+    </div>
+  </div>
+
+  <!-- Sites grid -->
+  <div class="card" style="margin-bottom:22px;">
+    <div class="card-title">🌐 A&E Segment Site Footprint</div>
+    <div class="grid-3" style="margin-bottom:0;">
+      <div style="background:#f8faff;border-radius:8px;padding:14px;border-left:4px solid #0076be;">
+        <div style="font-size:12px;font-weight:700;color:#0a2342;margin-bottom:5px;">🇺🇸 Burbank CA — HQ</div>
+        <div style="font-size:11px;color:#555;line-height:1.6;">Hydro-Aire Division (Landing Systems, BCS). Brake Control Systems for F-35, KC-46, C-17. ~600 engineers. Center of gravity for A&E segment leadership and landing systems engineering.</div>
+        <div style="margin-top:8px;"><span class="prog-badge" style="background:#0076be;color:white;">F-35 BCS</span><span class="prog-badge" style="background:#e8f4fd;color:#0076be;">KC-46 Landing</span></div>
+      </div>
+      <div style="background:#f8faff;border-radius:8px;padding:14px;border-left:4px solid #0055a5;">
+        <div style="font-size:12px;font-weight:700;color:#0a2342;margin-bottom:5px;">🇺🇸 Lynnwood WA</div>
+        <div style="font-size:11px;color:#555;line-height:1.6;">ELDEC Division (Sensing & Connectivity). Proximity/position sensors for Boeing 737 MAX, 777X, 787, Airbus A320/A350, F-35. ~400 engineers. High-volume commercial + defense sensor design.</div>
+        <div style="margin-top:8px;"><span class="prog-badge" style="background:#0055a5;color:white;">Boeing Sensors</span><span class="prog-badge" style="background:#f0f7ff;color:#0055a5;">Airbus A350</span></div>
+      </div>
+      <div style="background:#f8faff;border-radius:8px;padding:14px;border-left:4px solid #004080;">
+        <div style="font-size:12px;font-weight:700;color:#0a2342;margin-bottom:5px;">🇺🇸 Redmond WA + Colorado Springs CO</div>
+        <div style="font-size:11px;color:#555;line-height:1.6;">Interpoint + Vian (Power & Microelectronics). DC/DC converters, space electronics, missile seeker components. Redmond ~200 eng, Vian (Colorado) ~180 eng. Vian integration ongoing — high-security, defense-focused.</div>
+        <div style="margin-top:8px;"><span class="prog-badge" style="background:#004080;color:white;">DoD Satellites</span><span class="prog-badge" style="background:#f0f7ff;color:#004080;">Missile Electronics</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Divisions portfolio -->
+  <div class="card">
+    <div class="card-title">🏭 Five Product Divisions — A&E Segment</div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+      <div style="background:#e8f4fd;border-radius:8px;padding:14px;border-left:4px solid #0076be;">
+        <div style="font-size:13px;font-weight:700;color:#0a2342;margin-bottom:4px;">1. Hydro-Aire (Landing Systems)</div>
+        <div style="font-size:10.5px;color:#555;line-height:1.7;"><strong>HQ:</strong> Burbank CA<br><strong>Products:</strong> BCS, anti-skid, nose-wheel steering<br><strong>Key Programs:</strong> F-35 BCS, KC-46, C-17 sustainment<br><strong>Revenue:</strong> ~$200M · <strong>Employees:</strong> 600</div>
+        <div style="margin-top:6px;"><span class="prog-badge" style="background:#0076be;color:white;">F-35 LRIP</span></div>
+      </div>
+      <div style="background:#f0f7ff;border-radius:8px;padding:14px;border-left:4px solid #0055a5;">
+        <div style="font-size:13px;font-weight:700;color:#0a2342;margin-bottom:4px;">2. ELDEC (Sensing & Connectivity)</div>
+        <div style="font-size:10.5px;color:#555;line-height:1.7;"><strong>HQ:</strong> Lynnwood WA<br><strong>Products:</strong> Proximity/position sensors, fluid measurement<br><strong>Key Programs:</strong> Boeing 737 MAX, 777X, Airbus A320/A350<br><strong>Revenue:</strong> ~$180M · <strong>Employees:</strong> 400</div>
+        <div style="margin-top:6px;"><span class="prog-badge" style="background:#0055a5;color:white;">Boeing MAX Ramp</span></div>
+      </div>
+      <div style="background:#f8f9fa;border-radius:8px;padding:14px;border-left:4px solid #004080;">
+        <div style="font-size:13px;font-weight:700;color:#0a2342;margin-bottom:4px;">3. Interpoint (Power Electronics)</div>
+        <div style="font-size:10.5px;color:#555;line-height:1.7;"><strong>HQ:</strong> Redmond WA<br><strong>Products:</strong> DC/DC converters, power conditioning, space-grade<br><strong>Key Programs:</strong> DoD satellites, UAV power, space payloads<br><strong>Revenue:</strong> ~$140M · <strong>Employees:</strong> 200</div>
+        <div style="margin-top:6px;"><span class="prog-badge" style="background:#004080;color:white;">Space/Defense</span></div>
+      </div>
+      <div style="background:#f8f9fa;border-radius:8px;padding:14px;border-left:4px solid #003366;">
+        <div style="font-size:13px;font-weight:700;color:#0a2342;margin-bottom:4px;">4. Vian Electronics (Acquired Jan 2024)</div>
+        <div style="font-size:10.5px;color:#555;line-height:1.7;"><strong>HQ:</strong> Colorado Springs CO<br><strong>Products:</strong> Missile seeker microwave, RF/microwave assemblies<br><strong>Key Programs:</strong> Advanced missile guidance, DoD long-range strike<br><strong>Revenue:</strong> Integration → ~$40M est. · <strong>Employees:</strong> 180</div>
+        <div style="margin-top:6px;"><span class="prog-badge" style="background:#003366;color:white;">Integration</span></div>
+      </div>
+      <div style="background:#f8f9fa;border-radius:8px;padding:14px;border-left:4px solid #005080;">
+        <div style="font-size:13px;font-weight:700;color:#0a2342;margin-bottom:4px;">5. Lear Romec (Fluid Management)</div>
+        <div style="font-size:10.5px;color:#555;line-height:1.7;"><strong>HQ:</strong> Elyria OH<br><strong>Products:</strong> Fuel system components, pumps, valves<br><strong>Key Programs:</strong> Military rotorcraft, regional jets<br><strong>Revenue:</strong> ~$120M · <strong>Employees:</strong> 300</div>
+        <div style="margin-top:6px;"><span class="prog-badge" style="background:#005080;color:white;">Fuel Systems</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SIGNAL CHAINS ═══ -->
+<div id="signals" class="section">
+  <div class="section-title">📡 Signal Chains — Why Crane A&E Is Hiring Now</div>
+
+  <!-- Chain 1 -->
+  <div class="chain" style="border:1.5px solid #bfdbfe;margin-bottom:14px;">
+    <div class="chain-num" style="background:#0055a5;">1</div>
+    <div class="chain-body">
+      <div class="chain-cell" style="background:white;">
+        <div class="chain-label" style="color:#0055a5;">✈️ Industry Signal</div>
+        <div class="chain-head">Vian Acquisition Integration (Jan 2024 — NOW)</div>
+        <div class="chain-body-text">Crane acquired Vian Enterprises for $103M in January 2024, adding missile seeker microwave components and advanced defense electronics. Integration is in FULL SWING — new product line documentation, integration control documents (ICDs), technical data packages, design assurance, supply chain documentation all need to be architected and authored fast. Vian sits in Colorado Springs (high-security, high-autonomy center). Multi-site integration work = significant documentation bandwidth gap.</div>
+      </div>
+      <div class="chain-cell" style="background:#fff8f0;">
+        <div class="chain-label" style="color:#b45309;">📈 Hiring Surge</div>
+        <div class="chain-head">ICD Management · Tech Data Packages · DO-254 Design Assurance</div>
+        <div class="chain-body-text">Active roles: Integration Engineers, Technical Data Managers, DO-254 Design Assurance Specialists, Systems Integration Leads. Vian team (180 eng) now answers to John Higgs (Burbank A&E President) but operates autonomously for security. Documentation and certification work is NON-CLASSIFIED and deliverable. India ER&D is the natural fit — Cyient has done acquisition integration work for major defense primes.</div>
+      </div>
+      <div class="chain-cell" style="background:#f0fdf4;">
+        <div class="chain-label" style="color:#2e7d32;">🎯 Target Contact</div>
+        <div class="chain-head">Director Engineering, Vian Electronics — Colorado Springs</div>
+        <div class="chain-body-text">Search: "Vian Electronics Director Engineering Colorado" or "Crane Aerospace Vian Integration Lead." Fast-sell: "Vian integration documentation — ICDs, tech data packages, design assurance. We've handled acquisition integration at equivalent scale. 6-week scope, India-delivered." Ask for: VP Integration Engineering or Director, Technical Documentation.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chain 2 -->
+  <div class="chain" style="border:1.5px solid #bfdbfe;margin-bottom:14px;">
+    <div class="chain-num" style="background:#0055a5;">2</div>
+    <div class="chain-body">
+      <div class="chain-cell" style="background:white;">
+        <div class="chain-label" style="color:#0055a5;">🎯 Industry Signal</div>
+        <div class="chain-head">$864M Backlog (+23%) Production Ramp — F-35 LRIP Multi-Year</div>
+        <div class="chain-body-text">Crane A&E backlog hit $864M in Dec 2024, up 23% YoY — representing 19+ months of revenue visibility. Hydro-Aire Brake Control Systems on F-35 Lightning II is a high-content, safety-critical system. F-35 multi-year LRIP runs through 2032+. Every new delivery = AMM/CMM revisions, SRM updates, certification documents. Backlog pressure = engineering bandwidth bottleneck at Burbank (Hydro-Aire HQ).</div>
+      </div>
+      <div class="chain-cell" style="background:#fff8f0;">
+        <div class="chain-label" style="color:#b45309;">📈 Hiring Surge</div>
+        <div class="chain-head">Technical Publications · CMM/IPC Authoring · DO-178C Verification</div>
+        <div class="chain-body-text">Active roles: Technical Writers (ATA-32 landing systems), IPC Authors (Illustrated Parts Catalogs), DO-178C VVer Engineers (BCS software certification), Structures Documentation Specialists. All deliverable from India. Burbank engineering owns BCS program — documentation outsource is a standard practice (Bombardier, Gulfstream both do this at scale).</div>
+      </div>
+      <div class="chain-cell" style="background:#f0fdf4;">
+        <div class="chain-label" style="color:#2e7d32;">🎯 Target Contact</div>
+        <div class="chain-head">VP Engineering, Hydro-Aire (Landing Systems) — Burbank CA</div>
+        <div class="chain-body-text">Search: "Crane Aerospace Hydro-Aire VP Engineering Burbank" on LinkedIn. Fast-sell: "F-35 BCS production ramp — CMM authoring and DO-178C verification both outsourceable. We've done equivalent scope for Bombardier. 4-week pilot scope, India-delivered, 60% cost advantage." Ask for: Manager, Engineering Documentation or Director, Technical Publications.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chain 3 -->
+  <div class="chain" style="border:1.5px solid #bfdbfe;margin-bottom:14px;">
+    <div class="chain-num" style="background:#0055a5;">3</div>
+    <div class="chain-body">
+      <div class="chain-cell" style="background:white;">
+        <div class="chain-label" style="color:#0055a5;">📈 Industry Signal</div>
+        <div class="chain-head">Boeing 737 MAX Production Rate Increase → ELDEC Sensor Ramp</div>
+        <div class="chain-body-text">Boeing 737 MAX production is ACCELERATING post-grounding certification (2020). ELDEC sensors on MAX (proximity, position, fluid measurement) are high-volume, OEM-spec components on tight delivery schedule. Crane is ramping ELDEC production proportionally. Rate increases always create documentation lag — AMM updates, IPC revisions, ATA-24 electrical documentation all need to scale with production.</div>
+      </div>
+      <div class="chain-cell" style="background:#fff8f0;">
+        <div class="chain-label" style="color:#b45309;">📈 Hiring Surge</div>
+        <div class="chain-head">Technical Pubs · DO-254 Design Assurance · Sensor Documentation</div>
+        <div class="chain-body-text">Active roles: ATA-24 Electrical Documentation Specialists, DO-254 Design Assurance Engineers, Sensor Systems Technical Writers, Configuration Management Specialists. ELDEC is DO-254 certified — high-reliability documentation standard. India ER&D handles this at scale. Lynnwood (ELDEC HQ) can't absorb documentation scaling alone.</div>
+      </div>
+      <div class="chain-cell" style="background:#f0fdf4;">
+        <div class="chain-label" style="color:#2e7d32;">🎯 Target Contact</div>
+        <div class="chain-head">VP Engineering, ELDEC (Sensing & Connectivity) — Lynnwood WA</div>
+        <div class="chain-body-text">Search: "Crane Aerospace ELDEC Engineering Director Lynnwood" on LinkedIn. Fast-sell: "737 MAX rate is up — ELDEC sensor documentation (ATA-24, IPC, DO-254) needs to scale. We deliver that from India. 3-week pilot scope." Angle: 737 MAX is highest-volume commercial platform — documentation demand is sustained and predictable.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chain 4 -->
+  <div class="chain" style="border:1.5px solid #bfdbfe;margin-bottom:14px;">
+    <div class="chain-num" style="background:#0055a5;">4</div>
+    <div class="chain-body">
+      <div class="chain-cell" style="background:white;">
+        <div class="chain-label" style="color:#0055a5;">🚀 Strategic Signal</div>
+        <div class="chain-head">Alex Alcala as New CEO (April 27, 2026) — Strategic Partnership Window</div>
+        <div class="chain-body-text">Crane Company appointed Alex Alcala as President & CEO effective April 27, 2026 — just 7 days ago. New CEO = NEW PARTNERSHIP RECEPTIVENESS WINDOW. Alcala is a strategic, cost-conscious operator. Experience with large, diversified manufacturing means he understands India engineering leverage and cost model advantages. Bombardier and Gulfstream both use Cyient at enterprise scale — Alcala's network knows this.</div>
+      </div>
+      <div class="chain-cell" style="background:#fff8f0;">
+        <div class="chain-label" style="color:#b45309;">📈 Strategic Implication</div>
+        <div class="chain-head">India ER&D Strategy Receptiveness — Margin Expansion Pitch</div>
+        <div class="chain-body-text">New CEO is evaluating ALL cost structures. Crane A&E margin is already 22.4% (best-in-class). India ER&D at Cyient cost model = additional 2-3% EBITDA expansion without revenue loss. Alcala's mandate: grow margin faster than revenue. India outsourcing is the leverage point. CFO Rich Maue is the financial conduit — CFO-to-CFO introduction via Cyient Finance.</div>
+      </div>
+      <div class="chain-cell" style="background:#f0fdf4;">
+        <div class="chain-label" style="color:#2e7d32;">🎯 Target Contacts</div>
+        <div class="chain-head">CEO Alex Alcala + CFO Rich Maue (Executive Intro Path)</div>
+        <div class="chain-body-text">TIMING IS NOW. Pitch: "Bombardier, Gulfstream, Lockheed all use Cyient's India ER&D at scale for aerospace engineering. Crane A&E has the same cost opportunity — same 60% India advantage on F-35 BCS, ELDEC sensors, Vian integration. Let's explore how that expands your segment margin." Ask for: Introduction via Bombardier CEO or CFO contacts.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ HIRING INTELLIGENCE ═══ -->
+<div id="hiring" class="section">
+  <div class="section-title">💼 Hiring Intelligence — Non-Cleared Roles Only</div>
+
+  <!-- Banner -->
+  <div class="alert-banner">
+    <span class="alert-icon">🔍</span>
+    <span><strong>Non-Cleared Roles Only</strong> — Cyient targets: US Citizens · Green Card holders · No citizenship restriction roles. Secret / TS / SCI / classified positions are excluded from this tracker.</span>
+  </div>
+
+  <!-- Roles grid -->
+  <div class="grid-2" style="margin-bottom:22px;">
+    <div class="hiring-role">
+      <div class="hiring-role-title">Embedded Software Engineers (DO-178C)</div>
+      <div class="hiring-role-location">📍 Burbank CA, Lynnwood WA</div>
+      <div style="font-size:11px;color:#555;margin-top:8px;line-height:1.6;">Avionics brake control (BCS) and sensor system firmware. Need: C/C++, DO-178C certification, airborne systems background. F-35 BCS and ELDEC sensor platforms. 15–20 open roles estimated.</div>
+    </div>
+    <div class="hiring-role">
+      <div class="hiring-role-title">FPGA / VHDL Engineers</div>
+      <div class="hiring-role-location">📍 Lynnwood WA, Redmond WA</div>
+      <div style="font-size:11px;color:#555;margin-top:8px;line-height:1.6;">Sensor system FPGA design, avionics sensor electronics, high-reliability digital design. DO-254 experience valued. 8–12 open roles.</div>
+    </div>
+    <div class="hiring-role">
+      <div class="hiring-role-title">Systems Integration Engineers</div>
+      <div class="hiring-role-location">📍 Burbank CA</div>
+      <div style="font-size:11px;color:#555;margin-top:8px;line-height:1.6;">Landing systems and brake control integration. Interface management, test planning, configuration control. Hydro-Aire BCS program. 10–15 open roles.</div>
+    </div>
+    <div class="hiring-role">
+      <div class="hiring-role-title">Hardware Design Engineers (Power Electronics)</div>
+      <div class="hiring-role-location">📍 Redmond WA, Colorado Springs CO</div>
+      <div style="font-size:11px;color:#555;margin-top:8px;line-height:1.6;">DC/DC converter design, power distribution, space-grade and defense-grade component selection. Interpoint and Vian products. 8–12 open roles.</div>
+    </div>
+    <div class="hiring-role">
+      <div class="hiring-role-title">Structural / Mechanical Design Engineers</div>
+      <div class="hiring-role-location">📍 Burbank CA, Lynnwood WA</div>
+      <div style="font-size:11px;color:#555;margin-top:8px;line-height:1.6;">Landing gear structural analysis, sensor housing design, environmental qualification. CATIA V5, FEA tools. 10–15 open roles.</div>
+    </div>
+    <div class="hiring-role">
+      <div class="hiring-role-title">Verification & Validation Engineers (DO-178C/DO-254)</div>
+      <div class="hiring-role-location">📍 Burbank CA, Lynnwood WA</div>
+      <div style="font-size:11px;color:#555;margin-top:8px;line-height:1.6;">Avionics test automation, certification support, verification planning. F-35 BCS and ELDEC sensor certification. 12–18 open roles.</div>
+    </div>
+    <div class="hiring-role">
+      <div class="hiring-role-title">Technical Publications / Documentation Specialists</div>
+      <div class="hiring-role-location">📍 Burbank CA, Elyria OH</div>
+      <div style="font-size:11px;color:#555;margin-top:8px;line-height:1.6;">AMM/CMM (Aircraft Maintenance Manual), IPC (Illustrated Parts Catalogs), ATA-32 landing systems documentation. S1000D/ATA iSpec 2200 tools. 15–25 open roles. <strong>HIGHEST OUTSOURCE POTENTIAL.</strong></div>
+    </div>
+    <div class="hiring-role">
+      <div class="hiring-role-title">IPC / Configuration Management Specialists</div>
+      <div class="hiring-role-location">📍 Burbank CA, Lynnwood WA, Colorado Springs CO</div>
+      <div style="font-size:11px;color:#555;margin-top:8px;line-height:1.6;">Part numbering, IPC authoring, configuration control for landing systems and sensors. Enterprise PDM (windchill, TeamCenter). 8–12 open roles.</div>
+    </div>
+  </div>
+
+  <!-- Hiring demand by division -->
+  <div class="card" style="margin-bottom:22px;">
+    <div class="card-title">💼 Hiring Demand by Division</div>
+    <div class="grid-3">
+      <div style="background:#f8faff;border-radius:8px;padding:12px;border-left:3px solid #0076be;">
+        <div style="font-size:12px;font-weight:700;color:#0a2342;margin-bottom:6px;">Hydro-Aire (Burbank)</div>
+        <div style="font-size:10.5px;color:#555;line-height:1.7;"><strong>Top Hires:</strong> BCS software (DO-178C), systems integration, tech pubs (ATA-32). F-35 LRIP ramp = 35–45 roles. <strong>CMM/IPC outsource play.</strong></div>
+      </div>
+      <div style="background:#f0f7ff;border-radius:8px;padding:12px;border-left:3px solid #0055a5;">
+        <div style="font-size:12px;font-weight:700;color:#0a2342;margin-bottom:6px;">ELDEC (Lynnwood)</div>
+        <div style="font-size:10.5px;color:#555;line-height:1.7;"><strong>Top Hires:</strong> Sensor design, DO-254 VVer, FPGA, tech pubs (ATA-24). 737 MAX ramp = 25–35 roles. <strong>Outsource: Design assurance + ATA docs.</strong></div>
+      </div>
+      <div style="background:#f8f9fa;border-radius:8px;padding:12px;border-left:3px solid #004080;">
+        <div style="font-size:12px;font-weight:700;color:#0a2342;margin-bottom:6px;">Vian Integration (CO)</div>
+        <div style="font-size:10.5px;color:#555;line-height:1.7;"><strong>Top Hires:</strong> Integration engineering, ICD management, tech data packages. Ongoing integration = 20–30 roles. <strong>Outsource: Tech data + integration docs.</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CONTACTS ═══ -->
+<div id="contacts" class="section">
+  <div class="section-title">👥 Key Contacts — VP Engineering & Above</div>
+  <div id="ct-cards" class="grid-2"></div>
+</div>
+
+<!-- ═══ DIVISIONS ═══ -->
+<div id="divisions" class="section">
+  <div class="section-title">🏭 Product Divisions — Deep Dive</div>
+  <div id="div-cards" style="display:grid;grid-template-columns:1fr;gap:14px;"></div>
+</div>
+
+<!-- ═══ OUTREACH PLAYBOOK ═══ -->
+<div id="outreach" class="section">
+  <div class="section-title">🤝 Outreach Playbook</div>
+
+  <div class="card" style="background:linear-gradient(135deg,#0a2342,#0076be);color:white;border:none;margin-bottom:22px;">
+    <div style="font-size:13px;font-weight:700;margin-bottom:6px;">🎯 Campaign Headline</div>
+    <div style="font-size:12.5px;opacity:.95;line-height:1.7;">Vian acquisition integration + $864M backlog ramp + Alex Alcala as new CEO = partnership window NOW. Hydro-Aire BCS (F-35) and ELDEC sensors (Boeing 737 MAX) both need documentation scaling fast.</div>
+  </div>
+
+  <div style="margin-bottom:22px;">
+    <div class="card-title" style="color:#0a2342;margin-bottom:14px;">📍 Trigger Events (Cold→Warm Opportunities)</div>
+    <div id="op-triggers" class="grid-2" style="margin-bottom:0;"></div>
+  </div>
+
+  <div class="card" style="margin-bottom:22px;">
+    <div class="card-title">5-Step Cold-to-Warm Playbook</div>
+    <div id="op-steps"></div>
+  </div>
+</div>
+
+<!-- ═══ PARTNERSHIPS ═══ -->
+<div id="partnerships" class="section">
+  <div class="section-title">🤝 Partnerships & Alliances</div>
+  <div id="pw-cards" class="grid-2"></div>
+</div>
+
+<!-- ═══ EVENTS ═══ -->
+<div id="events" class="section">
+  <div class="section-title">📅 Industry Events</div>
+  <div id="ev-cards" class="grid-2"></div>
+</div>
+
+<!-- ═══ FAST-SELL SKILLS ═══ -->
+<div id="skills" class="section">
+  <div class="section-title">⚡ Fast-Sell Skills — Crane A&E Value Stack</div>
+  <div id="sk-cards" style="display:grid;grid-template-columns:1fr;gap:14px;"></div>
+</div>
+
+<!-- ═══ COMPETITIVE ═══ -->
+<div id="competitive" class="section">
+  <div class="section-title">⚔️ F-35 BCS Competitive Advantage</div>
+  <div class="card">
+    <div style="font-size:13px;font-weight:700;color:#0a2342;margin-bottom:12px;">Why Crane A&E Wins on F-35:</div>
+    <div style="font-size:11.5px;color:#555;line-height:1.7;margin-bottom:14px;">
+      Hydro-Aire Brake Control Systems (BCS) is the foundational landing system for F-35 Lightning II across all variants (F-35A USAF, F-35B USMC, F-35C USN). The BCS is:
+      <ul style="margin:8px 0 0 20px;"><li>High-reliability, DO-254/DO-178C certified avionics component</li><li>Safety-critical system — landing performance and go-around capability depend on BCS function</li><li>Multi-year LRIP contract through 2032+ (sustainment extends beyond)</li><li>High-content system = significant documentation burden (AMM, CMM, SRM, AFM, Design Assurance documentation)</li></ul>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:#0a2342;margin-bottom:8px;">Cyient's Competitive Angle:</div>
+    <div style="font-size:11.5px;color:#555;line-height:1.7;">Lockheed Martin (F-35 Program Office) expects suppliers to deliver complete technical documentation on schedule. Crane BCS engineering team (Burbank) is stretched across EIS, production ramp, and sustainment simultaneously. Documentation outsource is NOT a risk — it's standard practice. Lockheed contracts explicitly encourage supplier use of specialized ER&D partners for documentation/certification support. Cyient's DO-178C/DO-254 pedigree, previous Bombardier bizjet work, and India cost advantage make us a natural fit. Fast-sell: "F-35 BCS documentation scale — 8-month scope, India-delivered, we've done this for Bombardier at equivalent complexity."</div>
+  </div>
+</div>
+
+<!-- ═══ INDIA ER&D MODEL ═══ -->
+<div id="india" class="section">
+  <div class="section-title">🇮🇳 India ER&D Model — Crane Cost Leverage</div>
+  <div class="card">
+    <div style="font-size:13px;font-weight:700;color:#0a2342;margin-bottom:12px;">Strategic Fact: Crane A&E Has No India Presence</div>
+    <div style="font-size:11.5px;color:#555;line-height:1.7;margin-bottom:14px;">All Crane A&E engineering is currently based in North America: Burbank CA, Lynnwood WA, Redmond WA, Elyria OH, Colorado Springs CO. Burbank (Hydro-Aire) and Lynnwood (ELDEC) are the growth centers — but they're also the most expensive labor markets in aerospace. No strategic India CoE, no existing India partnerships, no India engineering budget. <strong>This is Cyient's entry vector.</strong></div>
+    <div style="font-size:12px;font-weight:700;color:#0a2342;margin-bottom:8px;">Cyient Hyderabad Cost Model — 60% Advantage:</div>
+    <div style="font-size:11.5px;color:#555;line-height:1.7;margin-bottom:14px;">Cyient Hyderabad center has deep aerospace ER&D capability: DO-178C/DO-254 certified engineers, S1000D/ATA iSpec 2200 technical publications, structural analysis (FEA), systems integration documentation, IPC authoring. Cost advantage vs. Burbank/Lynnwood: 60% lower fully-loaded engineering cost. Quality = same (Cyient is CMMI L5, ISO 9001, DoD-cleared). Delivery time = slightly longer (India time + coordination), but acceptable for non-critical-path work like CMM revisions, IPC authoring, design assurance documentation.</div>
+    <div style="font-size:12px;font-weight:700;color:#0a2342;margin-bottom:8px;">Crane A&E's FY2024 Margin Expansion Math:</div>
+    <div style="font-size:11.5px;color:#555;line-height:1.7;">Current EBITDA margin: 22.4% (~$171M on $760.4M revenue). If Crane shifts 15–20% of documentation/certification support to Cyient India ER&D, estimated annual ER&D cost savings: $12–18M. Margin expansion: +1.6–2.4% EBITDA. For a business at $760M scale, that's significant valuation uplift. New CEO Alex Alcala's mandate is margin expansion — this is the lever.</div>
+  </div>
+</div>
+
+<!-- ═══ DEFENSE GROWTH ═══ -->
+<div id="defense" class="section">
+  <div class="section-title">🛡️ Defense Growth — Vian Integration + F-35 LRIP</div>
+  <div class="card">
+    <div style="font-size:13px;font-weight:700;color:#0a2342;margin-bottom:12px;">Defense Revenue Trajectory:</div>
+    <div style="font-size:11.5px;color:#555;line-height:1.7;margin-bottom:14px;">
+      Crane A&E defense exposure is growing:
+      <ul style="margin:8px 0 0 20px;"><li><strong>Hydro-Aire BCS on F-35:</strong> High-content, multi-year LRIP through 2032+. Conservative estimate: 30–40% of Hydro-Aire revenue from F-35 alone.</li><li><strong>ELDEC sensors on F-35 + defense programs:</strong> F-35 sensor suite is a growing percentage of ELDEC revenue. Other defense programs: military rotorcraft, airborne ISR, strategic bombers.</li><li><strong>Interpoint power electronics on DoD satellites:</strong> Space/DoD segment is margin-accretive and growing. DC/DC converters for secure comms, EW, etc.</li><li><strong>Vian missile seeker + microwave components:</strong> Advanced missile guidance, long-range strike programs. Classified at ops level, but non-classified at engineering level.</li></ul>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:#0a2342;margin-bottom:8px;">Cyient's Defense ER&D Angle:</div>
+    <div style="font-size:11.5px;color:#555;line-height:1.7;">Cyient is cleared for non-classified defense work at scale (CMMC L3, DoD C3PAO approved, previous work with Lockheed, Raytheon, Northrop). Crane's defense growth (F-35, Vian integration, DoD satellites) is NOT classified at the ER&D level. Documentation, systems integration, design assurance = all outsourceable. Pitch to Vian leadership: "Your integration engineering — ICDs, tech data packages, design assurance — can be delivered from Hyderabad without security risk. Same quality, better cost."</div>
+  </div>
+</div>
+
+<!-- ═══ PROGRAMS ═══ -->
+<div id="programs" class="section">
+  <div class="section-title">✈️ Key Programs — Platform Roadmap</div>
+  <div class="card">
+    <div class="grid-2">
+      <div style="background:#e8f4fd;border-radius:8px;padding:14px;border-left:4px solid #0076be;">
+        <div style="font-size:13px;font-weight:700;color:#0a2342;margin-bottom:4px;">F-35 Lightning II (LRIP)</div>
+        <div style="font-size:11px;color:#555;line-height:1.6;margin-bottom:8px;"><strong>Crane Content:</strong> Hydro-Aire BCS (A/B/C variants), ELDEC sensors (proximity, position)</div>
+        <div style="font-size:11px;color:#555;line-height:1.6;margin-bottom:8px;"><strong>Status:</strong> Multi-year LRIP in full production. Navy and Air Force rate increases through 2032+.</div>
+        <div style="font-size:11px;font-weight:600;color:#0076be;">Cyient Angle: F-35 BCS documentation scale — CMM, SRM, ATA-32 authoring. Sustained multi-year scope.</div>
+      </div>
+      <div style="background:#f0f7ff;border-radius:8px;padding:14px;border-left:4px solid #0055a5;">
+        <div style="font-size:13px;font-weight:700;color:#0a2342;margin-bottom:4px;">Boeing 737 MAX / NG</div>
+        <div style="font-size:11px;color:#555;line-height:1.6;margin-bottom:8px;"><strong>Crane Content:</strong> ELDEC sensors (proximity, position, fluid measurement). High-volume OEM-spec component.</div>
+        <div style="font-size:11px;color:#555;line-height:1.6;margin-bottom:8px;"><strong>Status:</strong> Production rate ramping post-grounding (2020). Highest-volume commercial jet program.</div>
+        <div style="font-size:11px;font-weight:600;color:#0055a5;">Cyient Angle: ELDEC sensor tech pubs (ATA-24 electrical), IPC, DO-254 assurance. Tight delivery, high volume.</div>
+      </div>
+      <div style="background:#f8faff;border-radius:8px;padding:14px;border-left:4px solid #004080;">
+        <div style="font-size:13px;font-weight:700;color:#0a2342;margin-bottom:4px;">KC-46 Pegasus (Air Tanker)</div>
+        <div style="font-size:11px;color:#555;line-height:1.6;margin-bottom:8px;"><strong>Crane Content:</strong> Hydro-Aire landing systems, ELDEC sensors. Boeing-led tanker program for USAF.</div>
+        <div style="font-size:11px;color:#555;line-height:1.6;margin-bottom:8px;"><strong>Status:</strong> In production. Sustained demand through 2030s. High-reliability systems.</div>
+        <div style="font-size:11px;font-weight:600;color:#004080;">Cyient Angle: Landing systems tech pubs, ATA-32 documentation, DO-254 verification.</div>
+      </div>
+      <div style="background:#f8faff;border-radius:8px;padding:14px;border-left:4px solid #005080;">
+        <div style="font-size:13px;font-weight:700;color:#0a2342;margin-bottom:4px;">C-17 Globemaster III (Sustainment)</div>
+        <div style="font-size:11px;color:#555;line-height:1.6;margin-bottom:8px;"><strong>Crane Content:</strong> Hydro-Aire brake control systems. Long-tail MRO and sustainment.</div>
+        <div style="font-size:11px;color:#555;line-height:1.6;margin-bottom:8px;"><strong>Status:</strong> Long-tail sustainment program. Predictable overhaul/MRO demand.</div>
+        <div style="font-size:11px;font-weight:600;color:#005080;">Cyient Angle: C-17 BCS maintenance manual revisions, overhaul documentation, CM support.</div>
+      </div>
+      <div style="background:#f8faff;border-radius:8px;padding:14px;border-left:4px solid #003366;">
+        <div style="font-size:13px;font-weight:700;color:#0a2342;margin-bottom:4px;">Airbus A320 / A350</div>
+        <div style="font-size:11px;color:#555;line-height:1.6;margin-bottom:8px;"><strong>Crane Content:</strong> ELDEC sensors (A320/A350 families). Highest-volume commercial airliner.</div>
+        <div style="font-size:11px;color:#555;line-height:1.6;margin-bottom:8px;"><strong>Status:</strong> Sustained high production. A350 growth phase. Global supply chain.</div>
+        <div style="font-size:11px;font-weight:600;color:#003366;">Cyient Angle: Airbus supplier doc support — ATA-24 sensor integration, IPC, tech pubs.</div>
+      </div>
+      <div style="background:#f8faff;border-radius:8px;padding:14px;border-left:4px solid #004080;">
+        <div style="font-size:13px;font-weight:700;color:#0a2342;margin-bottom:4px;">Vian Defense Integration</div>
+        <div style="font-size:11px;color:#555;line-height:1.6;margin-bottom:8px;"><strong>Crane Content:</strong> Missile seeker microwave, RF/microwave assemblies. Advanced defense programs.</div>
+        <div style="font-size:11px;color:#555;line-height:1.6;margin-bottom:8px;"><strong>Status:</strong> Ongoing integration (Jan 2024 acquisition). High-growth trajectory.</div>
+        <div style="font-size:11px;font-weight:600;color:#004080;">Cyient Angle: Integration documentation, ICDs, tech data packages, design assurance (non-classified).</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ REFERENCE ═══ -->
+<div id="reference" class="section">
+  <div class="section-title">📚 Market Context — Crane Company Profile</div>
+  <div class="card">
+    <div style="margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:700;color:#0a2342;margin-bottom:8px;">Corporate Structure</div>
+      <div style="font-size:11.5px;color:#555;line-height:1.7;">Crane Company (NYSE: CR) separated from Crane Holdings in April 2023 and is now a pure-play diversified manufacturer. Five operating segments: Aerospace & Electronics (A&E), Fluid Handling, Payment & Merchandising Solutions, Engineered Systems, Specialty Manufacturing. A&E is the growth and margin engine.</div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:700;color:#0a2342;margin-bottom:8px;">Financial Profile (FY 2024)</div>
+      <div style="font-size:11.5px;color:#555;line-height:1.7;">Total Crane revenue: ~$3.7B. A&E segment: $760.4M (+18% YoY, driven by Vian acquisition $103M + organic growth). A&E EBITDA margin: 22.4% adjusted (best-in-class for aerospace). A&E backlog: $864M (+23% YoY), representing 19+ months of revenue visibility.</div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:700;color:#0a2342;margin-bottom:8px;">Leadership (Just Appointed)</div>
+      <div style="font-size:11.5px;color:#555;line-height:1.7;">CEO: Alex Alcala (effective April 27, 2026 — brand new). CFO: Rich Maue. A&E President: John Higgs (Burbank). VP Engineering: Multiple by division (Hydro-Aire, ELDEC, Interpoint, Vian, Lear Romec).</div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:700;color:#0a2342;margin-bottom:8px;">Geographic Footprint</div>
+      <div style="font-size:11.5px;color:#555;line-height:1.7;">Burbank CA (Hydro-Aire HQ, 600 eng) · Lynnwood WA (ELDEC, 400 eng) · Redmond WA (Interpoint, 200 eng) · Elyria OH (Lear Romec, 300 eng) · Colorado Springs CO (Vian, 180 eng) · Stamford CT (Crane parent HQ)</div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:700;color:#0a2342;margin-bottom:8px;">Data Source</div>
+      <div style="font-size:11.5px;color:#555;line-height:1.7;font-family:monospace;">Crane Company 10-K FY2024 (SEC filing) · Q4 2024 Earnings Call (company IR) · Vian Enterprises Acquisition Press Release (January 2024) · LinkedIn Recruiter (hiring signals)</div>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+
+<script>
+// Render data sections dynamically
+document.addEventListener('DOMContentLoaded', function() {
+
+  // Set last refreshed timestamp
+  document.getElementById('sb-refresh').textContent = CR_DATA.lastRefreshed;
+
+  // Render key contacts
+  const contactsHtml = CR_DATA.keyContacts.map(c => `
+    <div class="contact-card">
+      <div class="contact-badge" style="background:${c.color}">${c.badge}</div>
+      <div style="font-size:13px;font-weight:700;color:#0a2342;margin-bottom:2px;">${c.name}</div>
+      <div style="font-size:11px;color:#0076be;font-weight:600;margin-bottom:6px;">${c.title}</div>
+      <div style="font-size:10px;color:#666;margin-bottom:8px;">📍 ${c.loc}</div>
+      <div style="font-size:10.5px;color:#555;line-height:1.6;font-style:italic;border-left:3px solid #0076be;padding-left:10px;">"${c.pitch}"</div>
+    </div>
+  `).join('');
+  document.getElementById('ct-cards').innerHTML = contactsHtml;
+
+  // Render divisions deep dive
+  const divisionsHtml = Object.values(CR_DATA.divisions).map((d, idx) => {
+    const colors = ['#0076be', '#0055a5', '#004080', '#003366', '#005080'];
+    return `
+    <div class="card" style="border-left:4px solid ${colors[idx % colors.length]};">
+      <div style="font-size:13px;font-weight:700;color:#0a2342;margin-bottom:4px;">${d.name}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;font-size:11px;">
+        <div><span style="font-weight:700;color:#0076be;">HQ:</span> ${d.hq}</div>
+        <div><span style="font-weight:700;color:#0076be;">Revenue:</span> ${d.revenue}</div>
+        <div><span style="font-weight:700;color:#0076be;">Employees:</span> ${d.employees}</div>
+        <div><span style="font-weight:700;color:#0076be;">Status:</span> Active</div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Products</div>
+        <div style="font-size:11px;color:#555;line-height:1.6;">${d.products.join(' · ')}</div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Key Programs</div>
+        <div style="font-size:11px;color:#555;line-height:1.6;">${d.keyPrograms.join(' · ')}</div>
+      </div>
+      <div style="background:#f8faff;border-radius:6px;padding:10px;border-left:3px solid ${colors[idx % colors.length]};margin-bottom:8px;">
+        <div style="font-size:10px;font-weight:700;color:#0076be;margin-bottom:4px;">DO CONTENT</div>
+        <div style="font-size:10.5px;color:#555;">${d.doContent}</div>
+      </div>
+      <div style="background:#f0f7ff;border-radius:6px;padding:10px;border-left:3px solid #0076be;">
+        <div style="font-size:10px;font-weight:700;color:#0076be;margin-bottom:4px;">CYIENT ANGLE</div>
+        <div style="font-size:10.5px;color:#555;">${d.cyientAngle}</div>
+      </div>
+    </div>
+    `;
+  }).join('');
+  document.getElementById('div-cards').innerHTML = divisionsHtml;
+
+  // Render outreach triggers
+  const triggersHtml = CR_DATA.outreachPlaybook.triggers.map(t => `
+    <div class="trigger-card">
+      <div class="trigger-icon">${t.icon}</div>
+      <div class="trigger-label">${t.label}</div>
+      <div class="trigger-body">${t.body}</div>
+      <div class="trigger-action">💬 ${t.action}</div>
+    </div>
+  `).join('');
+  document.getElementById('op-triggers').innerHTML = triggersHtml;
+
+  // Render playbook steps
+  const stepsHtml = CR_DATA.outreachPlaybook.coldToWarm.map(step => `
+    <div class="playbook-step">
+      <span class="step-num">${step.step}</span><span class="step-label">${step.label}</span>
+      <div class="step-body">${step.body}</div>
+    </div>
+  `).join('');
+  document.getElementById('op-steps').innerHTML = stepsHtml;
+
+  // Render partnerships
+  const partnersHtml = CR_DATA.partnerships.map(p => `
+    <div class="partnership-card">
+      <div class="partnership-name">${p.name}</div>
+      <div class="partnership-type">${p.type} · ${p.status}</div>
+      <div class="partnership-desc">${p.desc}</div>
+      <div class="partnership-angle">🎯 ${p.angle}</div>
+    </div>
+  `).join('');
+  document.getElementById('pw-cards').innerHTML = partnersHtml;
+
+  // Render events
+  const eventsHtml = CR_DATA.events.map(e => `
+    <div class="event-card">
+      <div class="event-name">${e.name}</div>
+      <div class="event-date">📅 ${e.date}</div>
+      <div class="event-priority" style="background:${e.priority.includes('MUST') ? '#ffebee' : '#fff3e0'};color:${e.priority.includes('MUST') ? '#c62828' : '#e65100'};">${e.priority}</div>
+      <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;margin-bottom:6px;">📍 ${e.location} · ${e.type}</div>
+      <div class="event-desc">${e.why}</div>
+    </div>
+  `).join('');
+  document.getElementById('ev-cards').innerHTML = eventsHtml;
+
+  // Render fast-sell skills
+  const skillsData = [
+    { icon: '📋', title: 'Technical Publications (ATA-32 Landing Systems)', desc: 'CMM/IPC authoring for Hydro-Aire BCS. We deliver S1000D/ATA iSpec 2200 documentation at scale. F-35 BCS production ramp = 8-week scope, India-delivered, 60% cost advantage vs. Burbank hire.' },
+    { icon: '✓', title: 'DO-178C Verification & Validation (Brake Control Software)', desc: 'Avionics software verification for BCS and sensor systems. Our Hyderabad center is DO-178C certified, DAL B/C experienced. 4-week pilot scope for F-35 BCS VVer support.' },
+    { icon: '🔧', title: 'DO-254 Design Assurance (Sensor Electronics)', desc: 'Hardware design assurance for ELDEC sensor systems and Interpoint power electronics. ICD validation, design traceability, certification technical files. India delivery, low-risk integration.' },
+    { icon: '📐', title: 'Systems Integration Documentation (Vian Acquisition)', desc: 'Integration control documents, tech data package authoring for Vian post-acquisition. ICD management, multi-division coordination, design assurance files. 6-week scope.' },
+    { icon: '📊', title: 'Supply Chain & Configuration Management', desc: 'IPC (Illustrated Parts Catalogs), part numbering management, PDM support for landing systems and sensors. Enterprise PDM integration (Windchill, TeamCenter). Sustained, monthly support model.' }
+  ];
+
+  const skillsHtml = skillsData.map(s => `
+    <div class="fast-sell-skill">
+      <div class="skill-icon">${s.icon}</div>
+      <div class="skill-title">${s.title}</div>
+      <div class="skill-desc">${s.desc}</div>
+    </div>
+  `).join('');
+  document.getElementById('sk-cards').innerHTML = skillsHtml;
+});
+
+function switchSection(evt, id) {
+  evt.preventDefault();
+
+  // Hide all sections
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+
+  // Remove active from all sidebar items
+  document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+
+  // Show target section
+  document.getElementById(id).classList.add('active');
+
+  // Mark clicked item as active
+  evt.target.closest('.sidebar-item').classList.add('active');
+
+  // Scroll to top
+  document.querySelector('.main-content').scrollTop = 0;
+}
+</script>
+
+</body>
+</html>
